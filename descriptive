@@ -1,0 +1,239 @@
+##########################################################################
+### PUBLIC PERCEPTION ON COUNTRIES' TOP 2 PRIORITIES: INDIVIDUAL DATA ####
+##########################################################################
+
+# Load necessary packages
+library(dplyr)
+library(haven)
+library(ggplot2)
+library(xlsx)
+library(sf)
+library(writexl) 
+library(tidyverse)
+library(stringr)
+
+# Upload dataset
+combined_data <- read_sav("2005-24_EB.sav")
+
+# Recode Germany and UK
+combined_data <- combined_data %>%
+  mutate(isocntry = ifelse(isocntry %in% c("DE-E", "DE-W"), "DE", isocntry))
+
+combined_data <- combined_data %>%
+  mutate(isocntry = ifelse(isocntry %in% c("GB-GBN","GB-NIR"), "GB", isocntry))
+
+# Remove countries with missing years
+exclude_countries <- c("CY-TCC", "AL", "GE","BA","MK","RS","RS-KM", "ME","MD","IS","NO","CH")
+data <- combined_data %>%
+  filter(!isocntry %in% exclude_countries)
+
+# Create variable with both Health and Env
+data <- data %>%
+  mutate(clima_health = ifelse(qa3.11 == 1 & qa3.14 == 1, 1, 0)) # Health and Environment questions 
+
+# Calculate frequency and percentage per year and country
+climate_health <- data %>%
+  group_by(year, isocntry) %>%
+  summarise(
+    count = sum(clima_health, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+health <- data %>%
+  group_by(year, isocntry) %>%
+  summarise(
+    count = sum(qa3.11, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+climate <- data %>%
+  group_by(year, isocntry) %>%
+  summarise(
+    count = sum(qa3.14, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+#Ranking
+
+## Select the year + priority variables
+priority_vars <- paste0("qa3.", 1:19)
+
+## Pivot longer
+long_data <- data %>%
+  select(year, all_of(priority_vars)) %>%
+  pivot_longer(cols = all_of(priority_vars),
+               names_to = "question",
+               values_to = "value")
+
+## Summarise % of 1s per question per year
+priority <- long_data %>%
+  group_by(year, question) %>%
+  summarise(
+    percent_1 = round(100 * mean(value == 1, na.rm = TRUE), 1),
+    .groups = "drop"
+  )
+
+## Pivot wider to get table format
+priority_wide <- priority %>%
+  pivot_wider(names_from = year, values_from = percent_1)
+
+## Create a new data frame with ranks instead of percentages
+priority_ranks <- priority_wide %>%
+  mutate(across(
+    .cols = where(is.numeric),                         # Apply to year columns
+    .fns = ~rank(-., ties.method = "min")              # Rank descending: 1 = highest
+  ))
+
+## Save rankings
+write_xlsx(priority_ranks,"Downloads/priority_ranks.xlsx")
+
+# Create Subregions
+data <- data %>%
+  mutate(region = case_when(
+    isocntry %in% c("DE", "FR", "BE", "NL", "AT", "CH", "LU") ~ "Western",
+    isocntry %in% c("SE", "NO", "DK", "FI", "IS", "EE", "IE", "LV", "LT", "UK") ~ "Northern",
+    isocntry %in% c("PL", "HU", "CZ", "SK", "RO", "BG") ~ "Eastern",
+    isocntry %in% c("IT", "SI","ES", "PT", "GR", "CY", "MT","TK") ~ "Southern"
+  ))
+
+
+# Percentage of respondents for climate and health per region and year
+ch_region <- data %>%
+  group_by(year, region) %>%
+  summarise(
+    count = sum(clima_health, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+# Percentage of respondents for health per region and year
+health_region <- data %>%
+  group_by(year, region) %>%
+  summarise(
+    count = sum(qa3.11, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+# Percentage of respondents for climate per region and year
+climate_region <- data %>%
+  group_by(year, region) %>%
+  summarise(
+    count = sum(qa3.14, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+##### URBAN-RURAL RESIDENCE #####
+
+# Percentage of respondents for climate per region and year
+climate_region_urbrural <- data %>%
+  group_by(year, region, d25) %>%
+  summarise(
+    count = sum(qa3.14, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+# Percentage of respondents for health per region and year
+health_region_urbrural <- data %>%
+  group_by(year, region, d25) %>%
+  summarise(
+    count = sum(qa3.11, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+# Percentage of respondents for climate and health per region and year
+climate_health_region_urbrural <- data %>%
+  group_by(year, region, d25) %>%
+  summarise(
+    count = sum(clima_health, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+##### GENDER #####
+
+# Percentage of respondents for climate per region and year
+climate_region_gender <- data %>%
+  group_by(year, region, d10) %>%
+  summarise(
+    count = sum(qa3.14, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+# Percentage of respondents for health per region and year
+health_region_gender <- data %>%
+  group_by(year, region, d10) %>%
+  summarise(
+    count = sum(qa3.11, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+# Percentage of respondents for climate and health per region and year
+ch_region_gender <- data %>%
+  group_by(year, region, d10) %>%
+  summarise(
+    count = sum(clima_health, na.rm = TRUE),  # Frequency: count of 1s
+    total = n(),  # Total number of respondents
+    percent = (count / total) * 100,  # Percentage
+    .groups = "drop"
+  )
+
+# Transform to wide format: countries as rows, years as columns (same code for gender and urban-rural)
+ch <- climate_health %>%
+  select(year, isocntry, percent) %>%
+  pivot_wider(names_from = year, values_from = percent)
+
+ch_region <- ch_region %>%
+  select(year, region, percent) %>%
+  pivot_wider(names_from = year, values_from = percent)
+
+health_region <- health_region %>%
+  select(year, region, percent) %>%
+  pivot_wider(names_from = year, values_from = percent)
+climate_region <- climate_region %>%
+  select(year, region, percent) %>%
+  pivot_wider(names_from = year, values_from = percent)
+
+write_xlsx(ch,"Downloads/climate_health.xlsx")
+write_xlsx(ch_region,"Downloads/climate_health_region.xlsx")
+write_xlsx(health_region,"Downloads/health_region.xlsx")
+write_xlsx(climate_region,"Downloads/climate_region.xlsx")
+
+###### VISUALISE ######
+
+ggplot(climate_health, aes(x = year, y = percent)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Climate and health as a country's top priority",
+       x = "Year", y = "Percentage (%)") +
+  theme_minimal()
+
+ggplot(health, aes(x = year, y = percent)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Health as a country's top priority",
+       x = "Year", y = "Percentage (%)") +
+  theme_minimal()
+
+ggplot(climate, aes(x = year, y = percent)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Climate as a country's top priority",
+       x = "Year", y = "Percentage (%)") +
+  theme_minimal()
