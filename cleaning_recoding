@@ -1,0 +1,171 @@
+##########################################################################
+### PUBLIC PERCEPTION ON COUNTRIES' TOP 2 PRIORITIES: INDIVIDUAL DATA ####
+##########################################################################
+
+# Load necessary packages
+library(dplyr)
+library(haven)
+library(ggplot2)
+library(xlsx)
+library(sf)
+library(writexl) 
+library(tidyverse)
+library(stringr)
+
+
+########################
+## Disaggregated data ##
+########################
+
+# Upload databases
+data2024 <- read_sav("2024_EB101.3_ZA8843_v1-0-0.sav")
+data2023c <- read_sav("2023_EB100.2_ZA8779_v1-0-0.sav")
+data2023b <- read_sav("2023_EB99.4_ZA7997_v1-0-0.sav")
+data2023a <- read_sav("2023_EB98.2_ZA7953_v1-0-0.sav")
+data2022b <- read_sav("2022_EB97.5_ZA7902_v1-0-0.sav")
+data2022a <- read_sav("2022_EB96.3_ZA7848_v1-0-0.sav")
+data2021b <- read_sav("2021_EB95.3_ZA7783_v1-0-0.sav")
+data2021a <- read_sav("2021_EB94.3_ZA7780_v2-0-0.sav")
+data2020 <- read_sav("2020_EB93.1_ZA7649_v2-1-0.sav")
+data2019b <- read_sav("2019_EB91.5_ZA7576_v1-0-0.sav")
+data2019a <- read_sav("2019_EB91.2_ZA7562_v1-0-0.sav")
+data2018b <- read_sav("2018_EB90.3_ZA7489_v2-0-0.sav")
+data2018a <- read_sav("2018_EB89.1_ZA6963_v2-0-0.sav")
+data2017b <- read_sav("2017_EB88.3_ZA6928_v2-0-0.sav")
+data2017a <- read_sav("2017_EB87.3_ZA6863_v2-0-0.sav")
+data2016b <- read_sav("2016_EB86.2_ZA6788_v2-0-0.sav")
+data2016a <- read_sav("2016_EB85.2_ZA6694_v2-0-0.sav")
+data2015b <- read_sav("2015_EB84.3_ZA6643_v4-0-0.sav")
+data2015a <- read_sav("2015_EB83.1_ZA5964_v2-0-0.sav")
+data2014c <- read_sav("2014_EB82.3_ZA5932_v3-0-0.sav")
+data2014b <- read_sav("2014_EB81.4_ZA5928_v3-0-0.sav")
+data2014a <- read_sav("2014_EB81.2_ZA5913_v2-0-0.sav")
+data2013b <- read_sav("2013_EB80.1_ZA5876_v2-0-0.sav")
+data2013a <- read_sav("2013_EB79.3_ZA5689_v2-0-0.sav")
+data2012b <- read_sav("2012_EB78.1_ZA5685_v2-0-0.sav")
+data2012a <- read_sav("2012_EB77.3_ZA5612_v2-0-0.sav")
+
+# Recoding variables from different collection ocasions A and B
+data2011b <- read_sav("2011_EB76.3_ZA5567_v2-0-1.sav")
+data2011a <- read_sav("2011_EB75.3_ZA5481_v2-0-1.sav")
+data2010b <- read_sav("2010_EB74.2_ZA5449_v2-2-0.sav")
+data2010a <- read_sav("2010_EB73.4_ZA5234_v2-0-1.sav")
+data2009b <- read_sav("2009_EB72.4_ZA4994_v3-0-0.sav")
+data2009a <- read_sav("2009_EB71.3_ZA4973_v3-0-0.sav")
+data2008b <- read_sav("2008_EB70.1_ZA4819_v3-0-2.sav")
+data2008a <- read_sav("2008_EB69.2_ZA4744_v5-0-0.sav")
+data2007b <- read_sav("2007_EB68.1_ZA4565_v4-0-1.sav")
+data2007a <- read_sav("2007_EB67.2_ZA4530_v2-1-0.sav")
+data2006 <- read_sav("2006_EB65.2_ZA4506_v1-0-1.sav")
+data2005b <- read_sav("2005_EB64.2_ZA4414_v1-1-0.sav")
+data2005a <- read_sav("2005_EB63.4_ZA4411_v1-1-0.sav")
+
+###############
+## Tidy 2006 ##
+###############
+data6 <- read_sav("2006_EB65.2_ZA4506_v1-0-1.sav")
+
+# Manually define column pairs
+a_cols <- c("qa3.1",	"qa3.2",	"qa3.3",	"qa3.4",	"qa3.5", "qa3.6",	"qa3.20",	"qa3.8",	"qa3.10",	"qa3.11",	"qa3.12",	"qa3.13",	"qa3.14",	"qa3.17",	"qa3.16",	"qa3.19")  # List of 'a' columns
+b_cols <- c("qa3.1b",	"qa3.2b",	"qa3.3b",	"qa3.4b",	"qa3.5b", "qa3.6b",	"qa3.20b",	"qa3.8b",	"qa3.10b",	"qa3.11b",	"qa3.12b",	"qa3.13b",	"qa3.14b",	"qa3.17b",	"qa3.16b",	"qa3.19b")  # Corresponding 'b' columns
+
+
+# Merge 'a' and 'b', replacing 9 with the other column's value
+for (i in seq_along(a_cols)) {
+  df[[a_cols[i]]] <- ifelse(df[[a_cols[i]]] == 9, df[[b_cols[i]]], df[[a_cols[i]]])
+  df[[a_cols[i]]] <- ifelse(df[[a_cols[i]]] == 9, df[[b_cols[i]]], df[[a_cols[i]]])  # Handle cases where both had 9
+}
+
+# Drop 'b' columns
+data06 <- data06[, a_cols]
+
+# Replace the corresponding columns in the original dataset
+data6[a_cols] <- data06[a_cols]
+
+write_sav(data6, "2006_EB.sav")
+
+# Combine the datasets per year and save them
+data05 <- bind_rows(data2005a, data2005b)
+write_sav(data05, "2005_EB.sav")
+data07 <- bind_rows(data2007a, data2007b)
+write_sav(data07, "2007_EB.sav")
+data08 <- bind_rows(data2008a, data2008b)
+write_sav(data08, "2008_EB.sav")
+data09 <- bind_rows(data2009a, data2009b)
+write_sav(data09, "2009_EB.sav")
+data10 <- bind_rows(data2010a, data2010b)
+write_sav(data10, "2010_EB.sav")
+data11 <- bind_rows(data2011a, data2011b)
+write_sav(data11, "2011_EB.sav")
+...
+data2022 <- bind_rows(data2022a, data2022b)
+data2023 <- bind_rows(data2023a, data2023b, data2023c)
+
+## Solve some errors in variables names 
+names_lower <- tolower(names(data2022))
+duplicated(names_lower)  # Will return TRUE for duplicates
+duplicated_names <- names(data2022)[duplicated(names_lower)]
+print(duplicated_names)
+data2022 <- data2022 %>%
+  select(-Respondent_Serial)
+data2023 <- data2023 %>%
+  select(-Respondent_Serial)
+## Save
+write_sav(data2022, "Downloads/wetransfer_eb_2025-04-01_1639/2022_EB.sav")
+write_sav(data2023, "Downloads/wetransfer_eb_2025-04-01_1639/2023_EB.sav")
+
+
+###########################################
+###### Tidy and create year variable ######
+###########################################
+
+# Data List
+data_list <- list(
+    data2012 = data2012,  data2013 = data2013, 
+    data2014 = data2014,  data2015 = data2015,
+    data2016 = data2016,  data2017 = data2017,
+    data2018 = data2018,  data2019 = data2019,
+    data2020 = data2020,  data2021 = data2021,
+    data2022 = data2022,  data2023 = data2023,  
+    data2024 = data2024,  data2005 = data2005,  
+    data2006 = data2006,  data2007 = data2007,  
+    data2008 = data2008,  data2009 = data2009,
+    data2010 = data2010,  data2011 = data2011
+  )
+
+# Add year variable
+  data_list <- lapply(names(data_list), function(name) {
+    df <- data_list[[name]]
+    
+    # Extract year from name like "data2015b"
+    year <- as.integer(str_extract(name, "\\d{4}"))
+    
+    # Add year column to every row
+    df$year <- year
+    
+    return(df)
+  })
+
+# Confirm datasets have a 'year' column
+  sapply(data_list, function(df) "year" %in% names(df))
+
+# Define the columns to keep
+columns_to_keep <- c("survey", "country","isocntry", "eu27b", "d11", "d11r1", "d11r2", #Country, Age
+                       "qa3.1",	"qa3.2",	"qa3.3",	"qa3.4",	"qa3.5", "qa3.6",	"qa3.7",	"qa3.8",	"qa3.9",	"qa3.10",	"qa3.11",	"qa3.12",	"qa3.13",	"qa3.14",	"qa3.15",	"qa3.16",	"qa3.17",	"qa3.18",	"qa3.19", #Main Q
+                       "d8",	"d8r1",	"d8r2", #Education
+                       "d9a.1",	"d9a.2",	"d9a.3",	"d9a.4",	"d9a.5",	"d9a.6",	"d9a.7",	"d9a.8",	"d9a.9", "d9a.10",	"d9a.11",	"d9a.12",	"d9a.13",
+                       "d10", "d25", #Sex, living in a rural/urban
+                       "year") 
+  
+# Drop all other columns and keep only the ones you need
+data_list1 <- lapply(data_list, function(df) {
+  df %>% dplyr::select(any_of(columns_to_keep))
+})  
+  
+# Combine all processed datasets into one
+combined_data <- bind_rows(data_list1)
+
+# View summary
+summary(combined_data)
+
+write_sav(combined_data, "2005-24_EB.sav")
