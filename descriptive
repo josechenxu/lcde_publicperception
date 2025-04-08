@@ -237,3 +237,67 @@ ggplot(climate, aes(x = year, y = percent)) +
   labs(title = "Climate as a country's top priority",
        x = "Year", y = "Percentage (%)") +
   theme_minimal()
+
+##########################
+## Final Visualisations ##
+##########################
+
+library(readxl)
+summary <- read_excel("Downloads/summary.xlsx")
+regions <- read_excel("Downloads/summary.xlsx", 
+                          sheet = "regions")
+
+
+sum_long <- summary %>%
+  pivot_longer(
+    cols = -EEA29,             # All columns except 'priority'
+    names_to = "year",
+    values_to = "percent"
+  ) %>%
+  mutate(year = as.numeric(year))  # Convert year to numeric for plotting
+
+
+ggplot(sum_long, aes(x = year, y = percent, color = EEA29)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(
+    title = "Priority Trends (2005–2024)",
+    x = "Year",
+    y = "Percentage",
+    color = "Priority"
+  ) +
+  theme_minimal()
+
+
+
+region_long <- regions %>%
+  pivot_longer(
+    cols = -c(region, priority),   # Keep these, pivot the rest
+    names_to = "year",
+    values_to = "percent"
+  ) %>%
+  mutate(year = as.numeric(year))
+
+
+ggplot(region_long, aes(x = year, y = percent, color = priority)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  facet_wrap(~ region) +
+  labs(
+    title = "Priority Trends by Region (2005–2024)",
+    x = "Year",
+    y = "Percentage",
+    color = "Priority"
+  ) +
+  theme_minimal()
+
+ggplot(region_long, aes(x = year, y = percent, color = region)) +
+  geom_line(size = 1.2) +
+  facet_wrap(~ priority) +
+  labs(
+    title = "Regional Differences in Priority Trends",
+    x = "Year",
+    y = "Percentage",
+    color = "Region"
+  ) +
+  theme_minimal()
