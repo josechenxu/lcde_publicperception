@@ -4,7 +4,7 @@ This folder includes all the information about the cleaning and analysis of the 
 Data from the Standard Eurobarometer were retrieved from GESIS - Leibniz-Institut für Sozialwissenschaften (https://search.gesis.org/) as they present individual level data with information about gender and urban-rural divide. 
 Individual responses also allowed to understand which people selected climate and health simultaneously as top priorities for the country.
 
-The main focus of this indicator is the question: "What do you think are the two most important issues facing <country> at the
+The main focus of this indicator is the question: "What do you think are the two most important issues facing YOUR COUNTRY at the
 moment?" 
 
 Steps taken in the analysis:
