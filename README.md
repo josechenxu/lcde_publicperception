@@ -1,6 +1,6 @@
 # lcde_publicperception
 
-This folder includes all the information about the cleaning and analysis of the Publi perception indicator for the Lancet Countdown in Europe 2026 Report.
+This folder includes all the information about the cleaning and analysis of the Public perception indicator for the Lancet Countdown in Europe 2026 Report.
 Data from the Standard Eurobarometer were retrieved from GESIS - Leibniz-Institut für Sozialwissenschaften (https://search.gesis.org/) as they present individual level data with information about gender and urban-rural divide. 
 Individual responses also allowed to understand which people selected climate and health simultaneously as top priorities for the country.
 
